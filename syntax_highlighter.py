@@ -1,7 +1,7 @@
 from PyQt5.QtCore import QRegExp
 from PyQt5.QtGui import QSyntaxHighlighter, QTextCharFormat, QFont, QColor
 
-class CppSyntaxHighlighter(QSyntaxHighlighter):
+class SyntaxHighlighter(QSyntaxHighlighter):
     def __init__(self, parent=None):
         super().__init__(parent)
         
@@ -12,15 +12,11 @@ class CppSyntaxHighlighter(QSyntaxHighlighter):
         keyword_format.setForeground(QColor(0, 0, 255))  # Blue
         keyword_format.setFontWeight(QFont.Bold)
         
-        # C++ keywords
+        # Keywords Scope
         keywords = [
-            "auto", "break", "case", "catch", "class", "const", "continue", "default",
-            "delete", "do", "double", "else", "enum", "explicit", "export", "extern",
-            "false", "float", "for", "friend", "goto", "if", "inline", "int", "long",
-            "mutable", "namespace", "new", "operator", "private", "protected", "public",
-            "register", "return", "short", "signed", "sizeof", "static", "struct",
-            "switch", "template", "this", "throw", "true", "try", "typedef", "typeid",
-            "typename", "union", "unsigned", "using", "virtual", "void", "volatile", "while"
+            "bool", "break", "case", "char", "class", "continue", "default",
+            "do", "double", "else", "false", "float", "for", "if", "int", "long",
+            "return", "short", "string", "switch", "true", "while"
         ]
         
         for word in keywords:
