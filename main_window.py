@@ -1,12 +1,12 @@
 import os
 from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
-                           QTextEdit, QPushButton, QLabel, QSplitter, 
-                           QStatusBar, QAction, QFileDialog, QMessageBox,
+                           QTextEdit, QPushButton, #QLabel, 
+                           QSplitter, QStatusBar, #QAction, QFileDialog, QMessageBox,
                            QPlainTextEdit)
 from PyQt5.QtGui import QFont, QColor, QPainter, QTextFormat
-from PyQt5.QtCore import Qt, QSize, QRect, pyqtSlot
+from PyQt5.QtCore import Qt, QSize, QRect #pyqtSlot
 
-from syntax_highlighter import CppSyntaxHighlighter
+from syntax_highlighter import SyntaxHighlighter
 from lexer import Lexer
 from parser import Parser
 from analyzer import SemanticAnalyzer
@@ -40,11 +40,11 @@ class CodeEditorWithLineNumbers(QPlainTextEdit):
         #self.highlightCurrentLine()
         
         # Set font for code editor
-        font = QFont("Courier New", 10)
+        font = QFont("Courier New", 12)
         self.setFont(font)
         
         # Set placeholder text
-        self.setPlaceholderText("Enter your C++ code here...")
+        self.setPlaceholderText("Enter your code here...")
 
     def lineNumberAreaWidth(self):
         digits = 1
@@ -94,21 +94,7 @@ class CodeEditorWithLineNumbers(QPlainTextEdit):
             top = bottom
             bottom = top + round(self.blockBoundingRect(block).height())
             blockNumber += 1
-
-    """def highlightCurrentLine(self):
-        extraSelections = []
-
-        if not self.isReadOnly():
-            selection = QTextEdit.ExtraSelection()
-            lineColor = QColor(Qt.yellow).lighter(180)
-            selection.format.setBackground(lineColor)
-            selection.format.setProperty(QTextFormat.FullWidthSelection, True)
-            selection.cursor = self.textCursor()
-            selection.cursor.clearSelection()
-            extraSelections.append(selection)
-
-        self.setExtraSelections(extraSelections)"""
-
+            
 # Main window class
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -117,7 +103,7 @@ class MainWindow(QMainWindow):
         
     def initUI(self):
         # Set window properties
-        self.setWindowTitle("QuadPals Code Compiler-Validator")
+        self.setWindowTitle("QuadPalidator")
         self.setGeometry(100, 100, 1000, 700)
         
         # Create central widget and layout
@@ -132,11 +118,11 @@ class MainWindow(QMainWindow):
         self.code_editor = CodeEditorWithLineNumbers()
         
         # Apply syntax highlighting
-        self.highlighter = CppSyntaxHighlighter(self.code_editor.document())
+        self.highlighter = SyntaxHighlighter(self.code_editor.document())
         
         # Output panel
         self.output_panel = QTextEdit()
-        self.output_panel.setFont(QFont("Courier New", 10))
+        self.output_panel.setFont(QFont("Courier New", 12))
         self.output_panel.setReadOnly(True)
         
         # Add widgets to splitter
@@ -167,26 +153,7 @@ class MainWindow(QMainWindow):
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
         self.status_bar.showMessage("Ready")
-        
-        # Create menu bar
-        menu_bar = self.menuBar()
-        file_menu = menu_bar.addMenu("File")
-        
-        # Open file action
-        open_action = QAction("Open", self)
-        open_action.triggered.connect(self.open_file)
-        file_menu.addAction(open_action)
-        
-        # Save file action
-        save_action = QAction("Save", self)
-        save_action.triggered.connect(self.save_file)
-        file_menu.addAction(save_action)
-        
-        # Exit action
-        exit_action = QAction("Exit", self)
-        exit_action.triggered.connect(self.close)
-        file_menu.addAction(exit_action)
-        
+
         # Initialize analysis modules
         self.error_handler = ErrorHandler()
         
@@ -253,23 +220,4 @@ class MainWindow(QMainWindow):
         self.code_editor.clear()
         self.output_panel.clear()
         self.status_bar.showMessage("Ready")
-        
-    def open_file(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "Open C++ File", "", "C++ Files (*.cpp *.h *.hpp);;All Files (*)")
-        if file_path:
-            try:
-                with open(file_path, 'r') as file:
-                    self.code_editor.setPlainText(file.read())
-                self.status_bar.showMessage(f"Opened: {file_path}")
-            except Exception as e:
-                QMessageBox.critical(self, "Error", f"Could not open file: {str(e)}")
-                
-    def save_file(self):
-        file_path, _ = QFileDialog.getSaveFileName(self, "Save C++ File", "", "C++ Files (*.cpp *.h *.hpp);;All Files (*)")
-        if file_path:
-            try:
-                with open(file_path, 'w') as file:
-                    file.write(self.code_editor.toPlainText())
-                self.status_bar.showMessage(f"Saved: {file_path}")
-            except Exception as e:
-                QMessageBox.critical(self, "Error", f"Could not save file: {str(e)}")
+    
