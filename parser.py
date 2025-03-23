@@ -57,7 +57,8 @@ class Parser:
         token = self.tokens[self.current_index]
         
         if token.type == TokenType.KEYWORD:
-            if token.value == "int" or token.value == "float" or token.value == "char" or token.value == "double" or token.value == "bool":
+            if token.value == "int" or token.value == "float" or token.value == "long" or token.value == "short" or \
+            token.value == "char" or token.value == "double" or token.value == "bool" or token.value == "string":
                 self._parse_variable_declaration()
             elif token.value == "for":
                 self._parse_for_loop()
@@ -67,6 +68,10 @@ class Parser:
                 self._parse_do_while_loop()
             elif token.value == "if":
                 self._parse_if_statement()
+            elif token.value == "switch":  
+                self._parse_switch_statement() 
+            elif token.value == "break": 
+                self._parse_break_statement() 
             elif token.value == "return":
                 self._parse_return_statement()
             else:
@@ -131,6 +136,14 @@ class Parser:
                             expr_node = ASTNode("Literal", value_token.value)
                             var_node.add_child(expr_node)
                             self.current_index += 1  # Consume the char value
+                    elif type_token.value == "string":
+                        if value_token.type != TokenType.STRING_LITERAL:
+                            self.errors.append(f"Unexpected token in string expression: {value_token.value} at line {value_token.line}, column {value_token.column}")
+                        else:
+                            # Create literal node for string value
+                            expr_node = ASTNode("Literal", value_token.value)
+                            var_node.add_child(expr_node)
+                            self.current_index += 1  # Consume the string value
                     else:
                         # For other types, parse a full expression
                         expr_node = self._parse_expression()
@@ -162,7 +175,6 @@ class Parser:
             return
             
     def _parse_expression(self):
-        print(f"Parsing expression. Current token: {self.tokens[self.current_index].value}")
         if self.current_index >= len(self.tokens):
             self.errors.append("Unexpected end of input while parsing expression")
             return ASTNode("Error")
@@ -300,7 +312,6 @@ class Parser:
         return left
     
     def _parse_unary(self):
-        print(f"Parsing unary. Current token: {self.tokens[self.current_index].value}")
         self._skip_comments()  # Skip comments before unary operator
         
         if self.current_index < len(self.tokens) and self.tokens[self.current_index].value in ["+", "-", "!", "++", "--"]:
@@ -315,7 +326,6 @@ class Parser:
         return self._parse_primary()
     
     def _parse_primary(self):
-        print(f"Parsing primary. Current token: {self.tokens[self.current_index].value}")
         self._skip_comments()  # Skip comments before primary expression
         
         if self.current_index >= len(self.tokens):
@@ -395,7 +405,8 @@ class Parser:
         
         self.current_index += 1  # Skip '}'
         self.ast.add_child(block_node)
-        
+    
+    # Loop parsing functions   
     def _parse_for_loop(self):
         if self.current_index >= len(self.tokens) or self.tokens[self.current_index].value != "for":
             self.errors.append("Expected 'for' keyword")
@@ -535,6 +546,7 @@ class Parser:
         for_node.add_child(body_node)
     
         return for_node
+    
     def _parse_do_while_loop(self):
         if self.current_index >= len(self.tokens) or self.tokens[self.current_index].value != "do":
             self.errors.append("Expected 'do' keyword")
@@ -586,6 +598,44 @@ class Parser:
         
         self.current_index += 1  # Skip ';'
         self.ast.add_child(do_while_node)
+        
+    def _parse_while_loop(self):
+        if self.current_index >= len(self.tokens) or self.tokens[self.current_index].value != "while":
+            self.errors.append("Expected 'while' keyword")
+            return
+        
+        self.current_index += 1  # Skip 'while'
+        self._skip_comments()  # Skip comments after 'while'
+        
+        if self.current_index >= len(self.tokens) or self.tokens[self.current_index].value != "(":
+            self.errors.append("Expected '(' after 'while'")
+            return
+        
+        self.current_index += 1  # Skip '('
+        self._skip_comments()  # Skip comments after '('
+        
+        while_node = ASTNode("WhileLoop")
+        
+        # Parse condition
+        condition = self._parse_expression()
+        while_node.add_child(condition)
+        
+        self._skip_comments()  # Skip comments after condition
+        
+        if self.current_index >= len(self.tokens) or self.tokens[self.current_index].value != ")":
+            self.errors.append("Expected ')' after while condition")
+            return
+        
+        self.current_index += 1  # Skip ')'
+        self._skip_comments()  # Skip comments after ')'
+        
+        # Parse body
+        if self.current_index < len(self.tokens) and self.tokens[self.current_index].value == "{":
+            self._parse_block()
+        else:
+            self._parse_statement()
+        
+        self.ast.add_child(while_node)
     
     def _parse_if_statement(self):
         if self.current_index >= len(self.tokens) or self.tokens[self.current_index].value != "if":
@@ -636,64 +686,176 @@ class Parser:
                 self._parse_statement()
         
         self.ast.add_child(if_node)
-    def _parse_while_loop(self):
-        if self.current_index >= len(self.tokens) or self.tokens[self.current_index].value != "while":
-            self.errors.append("Expected 'while' keyword")
-            return
         
-        self.current_index += 1  # Skip 'while'
-        self._skip_comments()  # Skip comments after 'while'
+    def _parse_switch_statement(self):
+        if self.current_index >= len(self.tokens) or self.tokens[self.current_index].value != "switch":
+            self.errors.append("Expected 'switch' keyword")
+            return None
+        
+        self.current_index += 1  # Skip 'switch'
+        self._skip_comments()  # Skip comments after 'switch'
         
         if self.current_index >= len(self.tokens) or self.tokens[self.current_index].value != "(":
-            self.errors.append("Expected '(' after 'while'")
-            return
+            self.errors.append("Expected '(' after 'switch'")
+            return None
         
         self.current_index += 1  # Skip '('
         self._skip_comments()  # Skip comments after '('
         
-        while_node = ASTNode("WhileLoop")
+        switch_node = ASTNode("SwitchStatement")
         
-        # Parse condition
-        condition = self._parse_expression()
-        while_node.add_child(condition)
+        # Parse the expression to switch on
+        expression = self._parse_expression()
+        if expression:
+            switch_node.add_child(expression)
         
-        self._skip_comments()  # Skip comments after condition
+        self._skip_comments()  # Skip comments after expression
         
         if self.current_index >= len(self.tokens) or self.tokens[self.current_index].value != ")":
-            self.errors.append("Expected ')' after while condition")
-            return
+            self.errors.append("Expected ')' after switch expression")
+            return switch_node
         
         self.current_index += 1  # Skip ')'
         self._skip_comments()  # Skip comments after ')'
         
-        # Parse body
-        if self.current_index < len(self.tokens) and self.tokens[self.current_index].value == "{":
-            self._parse_block()
-        else:
-            self._parse_statement()
+        # Parse the switch body with cases
+        if self.current_index >= len(self.tokens) or self.tokens[self.current_index].value != "{":
+            self.errors.append("Expected '{' after switch condition")
+            return switch_node
         
-        self.ast.add_child(while_node)
+        self.current_index += 1  # Skip '{'
+        self._skip_comments()  # Skip comments after '{'
+        
+        # Parse case statements
+        while self.current_index < len(self.tokens) and self.tokens[self.current_index].value != "}":
+            self._skip_comments()  # Skip comments before case
+            
+            if self.current_index >= len(self.tokens):
+                self.errors.append("Unexpected end of file in switch statement")
+                return switch_node
+            
+            if self.tokens[self.current_index].value == "case":
+                case_node = self._parse_case_statement()
+                if case_node:
+                    switch_node.add_child(case_node)
+            elif self.tokens[self.current_index].value == "default":
+                default_node = self._parse_default_statement()
+                if default_node:
+                    switch_node.add_child(default_node)
+            else:
+                self.errors.append(f"Expected 'case' or 'default' in switch statement, got {self.tokens[self.current_index].value}")
+                self._synchronize()
+        
+        if self.current_index >= len(self.tokens) or self.tokens[self.current_index].value != "}":
+            self.errors.append("Expected '}' to close switch statement")
+            return switch_node
+        
+        self.current_index += 1  # Skip '}'
+        return switch_node
+        
+    def _parse_case_statement(self):
+        if self.current_index >= len(self.tokens) or self.tokens[self.current_index].value != "case":
+            self.errors.append("Expected 'case' keyword")
+            return None
+        
+        self.current_index += 1  # Skip 'case'
+        self._skip_comments()  # Skip comments after 'case'
+        
+        case_node = ASTNode("CaseStatement")
+        
+        # Parse the case value
+        value = self._parse_expression()
+        if value:
+            case_node.add_child(value)
+        
+        self._skip_comments()  # Skip comments after value
+        
+        if self.current_index >= len(self.tokens) or self.tokens[self.current_index].value != ":":
+            self.errors.append("Expected ':' after case value")
+            return case_node
+        
+        self.current_index += 1  # Skip ':'
+        self._skip_comments()  # Skip comments after ':'
+        
+        # Parse case body statements
+        while (self.current_index < len(self.tokens) and 
+               self.tokens[self.current_index].value not in ["case", "default", "}"]):
+            
+            statement = self._parse_statement()
+            if statement:
+                case_node.add_child(statement)
+            
+            self._skip_comments()  # Skip comments after statement
+        
+        return case_node
+    
+    def _parse_default_statement(self):
+        if self.current_index >= len(self.tokens) or self.tokens[self.current_index].value != "default":
+            self.errors.append("Expected 'default' keyword")
+            return None
+        
+        self.current_index += 1  # Skip 'default'
+        self._skip_comments()  # Skip comments after 'default'
+        
+        default_node = ASTNode("DefaultStatement")
+        
+        if self.current_index >= len(self.tokens) or self.tokens[self.current_index].value != ":":
+            self.errors.append("Expected ':' after default")
+            return default_node
+        
+        self.current_index += 1  # Skip ':'
+        self._skip_comments()  # Skip comments after ':'
+        
+        # Parse default body statements
+        while (self.current_index < len(self.tokens) and 
+               self.tokens[self.current_index].value not in ["case", "default", "}"]):
+            
+            statement = self._parse_statement()
+            if statement:
+                default_node.add_child(statement)
+            
+            self._skip_comments()  # Skip comments after statement
+        
+        return default_node
+    
+    def _parse_break_statement(self):
+        if self.current_index >= len(self.tokens) or self.tokens[self.current_index].value != "break":
+            self.errors.append("Expected 'break' keyword")
+            return None
+        
+        self.current_index += 1  # Skip 'break'
+        self._skip_comments()  # Skip comments after 'break'
+        
+        break_node = ASTNode("BreakStatement")
+        
+        if self.current_index >= len(self.tokens) or self.tokens[self.current_index].value != ";":
+            self.errors.append("Expected ';' after break statement")
+            return break_node
+        
+        self.current_index += 1  # Skip ';'
+        return break_node
     
     def _parse_return_statement(self):
         if self.current_index >= len(self.tokens) or self.tokens[self.current_index].value != "return":
             self.errors.append("Expected 'return' keyword")
-            return
+            return None
         
         self.current_index += 1  # Skip 'return'
         self._skip_comments()  # Skip comments after 'return'
         
         return_node = ASTNode("ReturnStatement")
         
-        # Parse return value if present
+        # Parse return value if not immediately followed by semicolon
         if self.current_index < len(self.tokens) and self.tokens[self.current_index].value != ";":
             expr = self._parse_expression()
-            return_node.add_child(expr)
+            if expr:
+                return_node.add_child(expr)
         
         self._skip_comments()  # Skip comments after return expression
         
         if self.current_index >= len(self.tokens) or self.tokens[self.current_index].value != ";":
             self.errors.append("Expected ';' after return statement")
-            return
+            return return_node
         
         self.current_index += 1  # Skip ';'
-        self.ast.add_child(return_node)
+        return return_node
