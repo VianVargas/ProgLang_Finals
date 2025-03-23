@@ -7,6 +7,7 @@ class TokenType(Enum):
     LITERAL = auto()
     BOOL_LITERAL = auto()       # Added for 'true' and 'false'
     CHAR_LITERAL = auto()       # Added for 'A'
+    STRING_LITERAL = auto()
     NUMBER = auto()             # Added for 123
     OPERATOR = auto()
     SEPARATOR = auto()
@@ -33,19 +34,19 @@ class Lexer:
         self.line = 1
         self.column = 1
         
-        # C++ keywords
+        # Keywords
         self.keywords = {
             # Basic Data Types
-            "char", "int", "float", "double", "bool", "void",
+            "char", "int", "float", "double", "bool", "long", "short", "string",
 
             # Looping Keywords
             "for", "while", "do",
 
             # Arithmetic & Operators
-            "return", "sizeof",
+            "return",
 
             # Conditionals (Useful for Loops)
-            "if", "else", "switch", "case", "default",
+            "if", "else", "break", "switch", "case", "default"
         }
         
         # Regular expressions for tokens
@@ -62,6 +63,8 @@ class Lexer:
             (r'#\w+.*?(?:\n|$)', TokenType.PREPROCESSOR),
             # Character literals
             (r"'(?:\\.|[^'\\])'", TokenType.CHAR_LITERAL),
+            # String literals
+            (r'"(?:\\.|[^"\\])*"', TokenType.STRING_LITERAL),
             # String literals
             (r'"(?:\\.|[^"\\])*"', TokenType.LITERAL),
             # Floating point literals
@@ -128,10 +131,9 @@ class Lexer:
         
         return self.tokens
     
-code = 'char grade = "A";'
+"""code = 'string name = "vian";'
 lexer = Lexer(code)
 tokens = lexer.tokenize()
 
 for token in tokens:
-    print(token)
-    
+    print(token)""" 
