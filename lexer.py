@@ -5,10 +5,10 @@ class TokenType(Enum):
     KEYWORD = auto()
     IDENTIFIER = auto()
     LITERAL = auto()
-    BOOL_LITERAL = auto()       # Added for 'true' and 'false'
-    CHAR_LITERAL = auto()       # Added for 'A'
+    BOOL_LITERAL = auto()       
+    CHAR_LITERAL = auto()       
     STRING_LITERAL = auto()
-    NUMBER = auto()             # Added for 123
+    NUMBER = auto()             
     OPERATOR = auto()
     SEPARATOR = auto()
     COMMENT = auto()
@@ -130,10 +130,3 @@ class Lexer:
                     raise ValueError(f"Unknown token at line {line_num}, column {col}: '{line[pos]}'")
         
         return self.tokens
-    
-"""code = 'string name = "vian";'
-lexer = Lexer(code)
-tokens = lexer.tokenize()
-
-for token in tokens:
-    print(token)""" 

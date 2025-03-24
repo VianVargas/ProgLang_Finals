@@ -1,10 +1,9 @@
 import os
 from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
-                           QTextEdit, QPushButton, #QLabel, 
-                           QSplitter, QStatusBar, #QAction, QFileDialog, QMessageBox,
+                           QTextEdit, QPushButton, QSplitter, QStatusBar, 
                            QPlainTextEdit)
-from PyQt5.QtGui import QFont, QColor, QPainter, QTextFormat
-from PyQt5.QtCore import Qt, QSize, QRect #pyqtSlot
+from PyQt5.QtGui import QFont, QColor, QPainter 
+from PyQt5.QtCore import Qt, QSize, QRect 
 
 from syntax_highlighter import SyntaxHighlighter
 from lexer import Lexer
@@ -12,7 +11,6 @@ from parser import Parser
 from analyzer import SemanticAnalyzer
 from error_handler import ErrorHandler
 
-# Line number area widget
 class LineNumberArea(QWidget):
     def __init__(self, editor):
         super().__init__(editor)
@@ -24,16 +22,13 @@ class LineNumberArea(QWidget):
     def paintEvent(self, event):
         self.codeEditor.lineNumberAreaPaintEvent(event)
 
-# Code editor with line numbers
 class CodeEditorWithLineNumbers(QPlainTextEdit):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.lineNumberArea = LineNumberArea(self)
         
-        # Connect signals
         self.blockCountChanged.connect(self.updateLineNumberAreaWidth)
         self.updateRequest.connect(self.updateLineNumberArea)
-        #self.cursorPositionChanged.connect(self.highlightCurrentLine)
         
         # Initialize
         self.updateLineNumberAreaWidth(0)
@@ -106,7 +101,6 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("QuadPalidator")
         self.setGeometry(100, 100, 1000, 700)
         
-        # Create central widget and layout
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
@@ -114,10 +108,7 @@ class MainWindow(QMainWindow):
         # Create splitter for code and output panels
         splitter = QSplitter(Qt.Vertical)
         
-        # Code editor with line numbers
         self.code_editor = CodeEditorWithLineNumbers()
-        
-        # Apply syntax highlighting
         self.highlighter = SyntaxHighlighter(self.code_editor.document())
         
         # Output panel
@@ -125,7 +116,6 @@ class MainWindow(QMainWindow):
         self.output_panel.setFont(QFont("Courier New", 12))
         self.output_panel.setReadOnly(True)
         
-        # Add widgets to splitter
         splitter.addWidget(self.code_editor)
         splitter.addWidget(self.output_panel)
         splitter.setSizes([int(self.height() * 0.7), int(self.height() * 0.3)])
@@ -133,20 +123,15 @@ class MainWindow(QMainWindow):
         # Add splitter to main layout
         main_layout.addWidget(splitter)
         
-        # Create button layout
         button_layout = QHBoxLayout()
-        
-        # Validate button
         self.validate_button = QPushButton("Validate Code")
         self.validate_button.clicked.connect(self.validate_code)
         button_layout.addWidget(self.validate_button)
         
-        # Clear button
         self.clear_button = QPushButton("Clear")
         self.clear_button.clicked.connect(self.clear_fields)
         button_layout.addWidget(self.clear_button)
         
-        # Add button layout to main layout
         main_layout.addLayout(button_layout)
         
         # Create status bar
@@ -214,10 +199,9 @@ class MainWindow(QMainWindow):
         
         # All validations passed
         self.output_panel.append("\n✓ Code is valid for execution!")
-        self.status_bar.showMessage("Validation completed successfully")
+        self.status_bar.showMessage("Validation completed successfully!")
         
     def clear_fields(self):
         self.code_editor.clear()
         self.output_panel.clear()
         self.status_bar.showMessage("Ready")
-    

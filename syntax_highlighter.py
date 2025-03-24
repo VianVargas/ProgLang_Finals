@@ -9,7 +9,7 @@ class SyntaxHighlighter(QSyntaxHighlighter):
         
         # Format for keywords
         keyword_format = QTextCharFormat()
-        keyword_format.setForeground(QColor(0, 0, 255))  # Blue
+        keyword_format.setForeground(QColor(0, 0, 255)) 
         keyword_format.setFontWeight(QFont.Bold)
         
         # Keywords Scope
@@ -73,22 +73,3 @@ class SyntaxHighlighter(QSyntaxHighlighter):
                 length = expression.matchedLength()
                 self.setFormat(index, length, format)
                 index = expression.indexIn(text, index + length)
-        
-        # Handle multi-line comments
-        self.setCurrentBlockState(0)
-        
-        start_index = 0
-        if self.previousBlockState() != 1:
-            start_index = self.comment_start_expression.indexIn(text)
-        
-        while start_index >= 0:
-            end_index = self.comment_end_expression.indexIn(text, start_index)
-            
-            if end_index == -1:
-                self.setCurrentBlockState(1)
-                comment_length = len(text) - start_index
-            else:
-                comment_length = end_index - start_index + self.comment_end_expression.matchedLength()
-            
-            self.setFormat(start_index, comment_length, self.multi_line_comment_format)
-            start_index = self.comment_start_expression.indexIn(text, start_index + comment_length)
